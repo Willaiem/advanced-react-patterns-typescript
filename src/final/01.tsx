@@ -1,23 +1,51 @@
 // Context Module Functions
-// http://localhost:3000/isolated/final/01.js
+// http://localhost:3000/isolated/final/01.tsx
 
+import { dequal } from 'dequal'
 import * as React from 'react'
-import {dequal} from 'dequal'
 
-// ./context/user-context.js
+// ./context/user-context.tsx
 
+import { useAuth } from '../auth-context'
+import { Updates, User } from '../types'
 import * as userClient from '../user-client'
-import {useAuth} from '../auth-context'
+import { exhaustiveCheck, transformError } from '../utils'
 
-const UserContext = React.createContext()
+type TUserState = {
+  user: User | null
+  storedUser: User | null
+  status: 'pending' | 'resolved' | 'rejected' | null
+  error?: Error | null
+}
+
+type TUserAction =
+  | {
+    type: 'start update'
+    updates: User
+  }
+  | {
+    type: 'finish update'
+    updatedUser: User
+  }
+  | {
+    type: 'fail update'
+    error: Error
+  }
+  | {
+    type: 'reset'
+  }
+
+type TUserContext = readonly [TUserState, React.Dispatch<TUserAction>]
+
+const UserContext = React.createContext<TUserContext | undefined>(undefined)
 UserContext.displayName = 'UserContext'
 
-function userReducer(state, action) {
+function userReducer(state: TUserState, action: TUserAction): TUserState {
   switch (action.type) {
     case 'start update': {
       return {
         ...state,
-        user: {...state.user, ...action.updates},
+        user: { ...state.user, ...action.updates },
         status: 'pending',
         storedUser: state.user,
       }
@@ -48,20 +76,20 @@ function userReducer(state, action) {
       }
     }
     default: {
-      throw new Error(`Unhandled action type: ${action.type}`)
+      exhaustiveCheck(action, 'action.type')
     }
   }
 }
 
-function UserProvider({children}) {
-  const {user} = useAuth()
+function UserProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
   const [state, dispatch] = React.useReducer(userReducer, {
     status: null,
     error: null,
     storedUser: user,
     user,
   })
-  const value = [state, dispatch]
+  const value = [state, dispatch] as const
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
 
@@ -75,37 +103,47 @@ function useUser() {
 
 // got this idea from Dan and I love it:
 // https://twitter.com/dan_abramov/status/1125773153584676864
-async function updateUser(dispatch, user, updates) {
-  dispatch({type: 'start update', updates})
+async function updateUser(dispatch: React.Dispatch<TUserAction>, user: User, updates: Updates) {
+  dispatch({ type: 'start update', updates })
   try {
     const updatedUser = await userClient.updateUser(user, updates)
-    dispatch({type: 'finish update', updatedUser})
+    dispatch({ type: 'finish update', updatedUser })
     return updatedUser
-  } catch (error) {
-    dispatch({type: 'fail update', error})
+  } catch (err) {
+    const error = transformError(err)
+    dispatch({ type: 'fail update', error })
     return Promise.reject(error)
   }
 }
 
 // export {UserProvider, useUser, updateUser}
 
-// src/screens/user-profile.js
+// src/screens/user-profile.tsx
 // import {UserProvider, useUser, updateUser} from './context/user-context'
+
+const USER_INITIAL_STATE: User = {
+  username: '',
+  tagline: '',
+  bio: ''
+}
+
 function UserSettings() {
-  const [{user, status, error}, userDispatch] = useUser()
+  const [{ user, status, error }, userDispatch] = useUser()
 
   const isPending = status === 'pending'
   const isRejected = status === 'rejected'
 
-  const [formState, setFormState] = React.useState(user)
+  const [formState, setFormState] = React.useState<User>(user ?? USER_INITIAL_STATE)
 
   const isChanged = !dequal(user, formState)
 
-  function handleChange(e) {
-    setFormState({...formState, [e.target.name]: e.target.value})
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    setFormState(prevState => ({ ...prevState, [e.target.name]: e.target.value }))
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (!user) return
+
     event.preventDefault()
     updateUser(userDispatch, user, formState).catch(() => {
       /* ignore the error */
@@ -114,8 +152,8 @@ function UserSettings() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div style={{marginBottom: 12}}>
-        <label style={{display: 'block'}} htmlFor="username">
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block' }} htmlFor="username">
           Username
         </label>
         <input
@@ -124,11 +162,11 @@ function UserSettings() {
           disabled
           readOnly
           value={formState.username}
-          style={{width: '100%'}}
+          style={{ width: '100%' }}
         />
       </div>
-      <div style={{marginBottom: 12}}>
-        <label style={{display: 'block'}} htmlFor="tagline">
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block' }} htmlFor="tagline">
           Tagline
         </label>
         <input
@@ -136,11 +174,11 @@ function UserSettings() {
           name="tagline"
           value={formState.tagline}
           onChange={handleChange}
-          style={{width: '100%'}}
+          style={{ width: '100%' }}
         />
       </div>
-      <div style={{marginBottom: 12}}>
-        <label style={{display: 'block'}} htmlFor="bio">
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block' }} htmlFor="bio">
           Biography
         </label>
         <textarea
@@ -148,15 +186,15 @@ function UserSettings() {
           name="bio"
           value={formState.bio}
           onChange={handleChange}
-          style={{width: '100%'}}
+          style={{ width: '100%' }}
         />
       </div>
       <div>
         <button
           type="button"
           onClick={() => {
-            setFormState(user)
-            userDispatch({type: 'reset'})
+            setFormState(USER_INITIAL_STATE)
+            userDispatch({ type: 'reset' })
           }}
           disabled={!isChanged || isPending}
         >
@@ -169,19 +207,19 @@ function UserSettings() {
           {isPending
             ? '...'
             : isRejected
-            ? '✖ Try again'
-            : isChanged
-            ? 'Submit'
-            : '✔'}
+              ? '✖ Try again'
+              : isChanged
+                ? 'Submit'
+                : '✔'}
         </button>
-        {isRejected ? <pre style={{color: 'red'}}>{error.message}</pre> : null}
+        {isRejected && error ? <pre style={{ color: 'red' }}>{error.message}</pre> : null}
       </div>
     </form>
   )
 }
 
 function UserDataDisplay() {
-  const [{user}] = useUser()
+  const [{ user }] = useUser()
   return <pre>{JSON.stringify(user, null, 2)}</pre>
 }
 

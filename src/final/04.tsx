@@ -1,8 +1,8 @@
 // Prop Collections and Getters
-// http://localhost:3000/isolated/final/04.js
+// http://localhost:3000/isolated/final/04.tsx
 
 import * as React from 'react'
-import {Switch} from '../switch'
+import { Switch } from '../switch'
 
 function useToggle() {
   const [on, setOn] = React.useState(false)
@@ -19,7 +19,7 @@ function useToggle() {
 }
 
 function App() {
-  const {on, togglerProps} = useToggle()
+  const { on, togglerProps } = useToggle()
   return (
     <div>
       <Switch on={on} {...togglerProps} />

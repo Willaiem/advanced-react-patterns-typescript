@@ -1,28 +1,51 @@
 // Control Props
 // 💯 add a controlled state warning
-// http://localhost:3000/isolated/final/06.extra-2.js
+// http://localhost:3000/isolated/final/06.extra-2.tsx
 
 import * as React from 'react'
-import warning from 'warning'
-import {Switch} from '../switch'
+import { Switch } from '../switch'
+import { FlatTypes } from '../types'
+import { exhaustiveCheck } from '../utils'
+import warning from '../warning'
 
-const callAll = (...fns) => (...args) => fns.forEach(fn => fn?.(...args))
+type ToggleState = {
+  on: boolean
+}
+
+type ToggleAction =
+  | {
+    type: 'toggle'
+  }
+  | {
+    type: 'reset'
+    initialState: ToggleState
+  }
+
+type GetTogglerProps = FlatTypes<
+  & Omit<JSX.IntrinsicElements['span'], 'ref'>
+  & Pick<JSX.IntrinsicElements['input'], 'disabled'>
+  & { on: boolean }
+>
+
+type GetResetterProps = FlatTypes<JSX.IntrinsicElements['button']>
+
+const callAll = (...fns: Function[]) => (...args: unknown[]) => fns.forEach(fn => fn?.(...args))
 
 const actionTypes = {
   toggle: 'toggle',
   reset: 'reset',
-}
+} as const
 
-function toggleReducer(state, {type, initialState}) {
-  switch (type) {
+function toggleReducer(state: ToggleState, action: ToggleAction) {
+  switch (action.type) {
     case actionTypes.toggle: {
-      return {on: !state.on}
+      return { on: !state.on }
     }
     case actionTypes.reset: {
-      return initialState
+      return action.initialState
     }
     default: {
-      throw new Error(`Unsupported type: ${type}`)
+      exhaustiveCheck(action, 'action.type')
     }
   }
 }
@@ -33,14 +56,20 @@ function useToggle({
   onChange,
   on: controlledOn,
   readOnly = false,
-} = {}) {
-  const {current: initialState} = React.useRef({on: initialOn})
+}: {
+  initialOn?: boolean
+  reducer?: (state: ToggleState, action: ToggleAction) => ToggleState
+  onChange?: (state: ToggleState, action: ToggleAction) => void
+  on: boolean
+  readOnly?: boolean
+}) {
+  const { current: initialState } = React.useRef({ on: initialOn })
   const [state, dispatch] = React.useReducer(reducer, initialState)
 
   const onIsControlled = controlledOn != null
   const on = onIsControlled ? controlledOn : state.on
 
-  const {current: onWasControlled} = React.useRef(onIsControlled)
+  const { current: onWasControlled } = React.useRef(onIsControlled)
   React.useEffect(() => {
     warning(
       !(onIsControlled && !onWasControlled),
@@ -60,28 +89,28 @@ function useToggle({
     )
   }, [hasOnChange, onIsControlled, readOnly])
 
-  function dispatchWithOnChange(action) {
+  function dispatchWithOnChange(action: ToggleAction) {
     if (!onIsControlled) {
       dispatch(action)
     }
-    onChange?.(reducer({...state, on}, action), action)
+    onChange?.(reducer({ ...state, on }, action), action)
   }
 
-  const toggle = () => dispatchWithOnChange({type: actionTypes.toggle})
+  const toggle = () => dispatchWithOnChange({ type: actionTypes.toggle })
   const reset = () =>
-    dispatchWithOnChange({type: actionTypes.reset, initialState})
+    dispatchWithOnChange({ type: actionTypes.reset, initialState })
 
-  function getTogglerProps({onClick, ...props} = {}) {
+  function getTogglerProps({ onClick, ...props }: GetTogglerProps) {
     return {
       'aria-pressed': on,
-      onClick: callAll(onClick, toggle),
+      onClick: callAll(onClick ?? (() => { }), toggle),
       ...props,
     }
   }
 
-  function getResetterProps({onClick, ...props} = {}) {
+  function getResetterProps({ onClick, ...props }: GetResetterProps) {
     return {
-      onClick: callAll(onClick, reset),
+      onClick: callAll(onClick ?? (() => { }), reset),
       ...props,
     }
   }
@@ -95,13 +124,17 @@ function useToggle({
   }
 }
 
-function Toggle({on: controlledOn, onChange, readOnly}) {
-  const {on, getTogglerProps} = useToggle({
+function Toggle({ on: controlledOn = false, onChange, readOnly }: {
+  on?: boolean
+  onChange?: (state: ToggleState, action: ToggleAction) => void
+  readOnly?: boolean
+}) {
+  const { on, getTogglerProps } = useToggle({
     on: controlledOn,
     onChange,
     readOnly,
   })
-  const props = getTogglerProps({on})
+  const props = getTogglerProps({ on })
   return <Switch {...props} />
 }
 
@@ -109,7 +142,7 @@ function App() {
   const [bothOn, setBothOn] = React.useState(false)
   const [timesClicked, setTimesClicked] = React.useState(0)
 
-  function handleToggleChange(state, action) {
+  function handleToggleChange(state: ToggleState, action: ToggleAction) {
     if (action.type === actionTypes.toggle && timesClicked > 4) {
       return
     }
@@ -152,7 +185,7 @@ function App() {
 
 export default App
 // we're adding the Toggle export for tests
-export {Toggle}
+export { Toggle }
 
 /*
 eslint
