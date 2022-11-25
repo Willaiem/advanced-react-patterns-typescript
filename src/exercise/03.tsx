@@ -1,13 +1,16 @@
 // Flexible Compound Components
-// http://localhost:3000/isolated/exercise/03.js
+// http://localhost:3000/isolated/exercise/03.tsx
+
+// 💣 Remove the ts-nocheck comment and start working!
+// @ts-nocheck
 
 import * as React from 'react'
-import {Switch} from '../switch'
+import { Switch } from '../switch'
 
 // 🐨 create your ToggleContext context here
 // 📜 https://reactjs.org/docs/context.html#reactcreatecontext
 
-function Toggle({children}) {
+function Toggle({ children }: { children: React.ReactNode }) {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
 
@@ -16,7 +19,7 @@ function Toggle({children}) {
   return React.Children.map(children, child => {
     return typeof child.type === 'string'
       ? child
-      : React.cloneElement(child, {on, toggle})
+      : React.cloneElement(child, { on, toggle })
   })
 }
 
@@ -27,17 +30,17 @@ function Toggle({children}) {
 // your context won't be exposed to the user
 // 💰 `const context = React.useContext(ToggleContext)`
 // 📜 https://reactjs.org/docs/hooks-reference.html#usecontext
-function ToggleOn({on, children}) {
-  return on ? children : null
+function ToggleOn({ on, children }: { on: boolean, children: React.ReactNode }) {
+  return on ? <>{children}</> : null
 }
 
 // 🐨 do the same thing to this that you did to the ToggleOn component
-function ToggleOff({on, children}) {
-  return on ? null : children
+function ToggleOff({ on, children }: { on: boolean, children: React.ReactNode }) {
+  return on ? null : <>{children}</>
 }
 
 // 🐨 get `on` and `toggle` from the ToggleContext with `useContext`
-function ToggleButton({on, toggle, ...props}) {
+function ToggleButton({ on, toggle, ...props }: { on: boolean, toggle: () => void, children?: React.ReactNode }) {
   return <Switch on={on} onClick={toggle} {...props} />
 }
 

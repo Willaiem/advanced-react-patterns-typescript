@@ -1,8 +1,11 @@
+// 💣 Remove the ts-nocheck comment and start working!
+// @ts-nocheck
+
 // Compound Components
-// http://localhost:3000/isolated/exercise/02.js
+// http://localhost:3000/isolated/exercise/02.tsx
 
 import * as React from 'react'
-import {Switch} from '../switch'
+import { Switch } from '../switch'
 
 function Toggle() {
   const [on, setOn] = React.useState(false)

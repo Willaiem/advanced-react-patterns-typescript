@@ -1,8 +1,11 @@
 // Prop Collections and Getters
-// http://localhost:3000/isolated/exercise/04.js
+// http://localhost:3000/isolated/exercise/04.tsx
+
+// 💣 Remove the ts-nocheck comment and start working!
+// @ts-nocheck
 
 import * as React from 'react'
-import {Switch} from '../switch'
+import { Switch } from '../switch'
 
 function useToggle() {
   const [on, setOn] = React.useState(false)
@@ -11,11 +14,11 @@ function useToggle() {
   // 🐨 Add a property called `togglerProps`. It should be an object that has
   // `aria-pressed` and `onClick` properties.
   // 💰 {'aria-pressed': on, onClick: toggle}
-  return {on, toggle}
+  return { on, toggle }
 }
 
 function App() {
-  const {on, togglerProps} = useToggle()
+  const { on, togglerProps } = useToggle()
   return (
     <div>
       <Switch on={on} {...togglerProps} />
