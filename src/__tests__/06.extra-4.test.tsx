@@ -1,20 +1,23 @@
-import * as React from 'react'
-import {alfredTip} from '@kentcdodds/react-workshop-app/test-utils'
-import {render, screen} from '@testing-library/react'
+import { alfredTip } from '@kentcdodds/react-workshop-app/test-utils'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {Toggle} from '../final/06.extra-4'
+import * as React from 'react'
+import { Toggle } from '../final/06.extra-4'
 // import {Toggle} from '../exercise/06'
 
+let mockedConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { })
+
 beforeEach(() => {
-  jest.spyOn(console, 'error').mockImplementation(() => {})
+  mockedConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { })
 })
 
 afterEach(() => {
-  console.error.mockRestore()
+  mockedConsoleError.mockRestore()
 })
 
 test('warning for controlled component without onChange', async () => {
   render(<Toggle on={false} />)
+
   alfredTip(
     () =>
       expect(console.error).toHaveBeenCalledWith(
@@ -40,7 +43,7 @@ test('warning for controlled component without onChange', async () => {
 })
 
 test('no warning for controlled component with onChange prop', async () => {
-  render(<Toggle on={false} onChange={() => {}} />)
+  render(<Toggle on={false} onChange={() => { }} />)
   expect(console.error).toHaveBeenCalledTimes(0)
 })
 
@@ -54,11 +57,13 @@ test('no warning for controlled component with readOnly prop', async () => {
 
 test('warning for changing from controlled to uncontrolled', async () => {
   function Example() {
-    const [state, setState] = React.useState(true)
+    const [state, setState] = React.useState<true | undefined>(true)
     return <Toggle on={state} onChange={() => setState(undefined)} />
   }
   render(<Example />)
+
   await userEvent.click(screen.getByLabelText(/toggle/i))
+
   alfredTip(
     () =>
       expect(console.error).toHaveBeenCalledWith(
@@ -70,7 +75,7 @@ test('warning for changing from controlled to uncontrolled', async () => {
 
 test('warning for changing from uncontrolled to controlled', async () => {
   function Example() {
-    const [state, setState] = React.useState(undefined)
+    const [state, setState] = React.useState<true | undefined>(undefined)
     return <Toggle on={state} onChange={() => setState(true)} />
   }
   render(<Example />)

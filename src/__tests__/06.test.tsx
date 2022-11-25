@@ -1,6 +1,5 @@
-import * as React from 'react'
-import {renderToggle, screen, userEvent} from '../../test/utils'
-import App, {Toggle} from '../final/06'
+import { renderToggle, screen, userEvent } from '../../test/utils'
+import App, { Toggle } from '../final/06'
 // import App, {Toggle} from '../exercise/06'
 
 test('toggling either toggle toggles both', async () => {
@@ -17,7 +16,7 @@ test('toggling either toggle toggles both', async () => {
 })
 
 test('toggle can still be uncontrolled', async () => {
-  const {toggleButton, toggle} = renderToggle(<Toggle />)
+  const { toggleButton, toggle } = renderToggle(<Toggle />)
   expect(toggleButton).not.toBeChecked()
   await toggle()
   expect(toggleButton).toBeChecked()
