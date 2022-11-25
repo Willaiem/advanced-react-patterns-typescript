@@ -1,10 +1,10 @@
-// http://localhost:3000/isolated/examples/warnings.js
+// http://localhost:3000/isolated/examples/warnings.tsx
 
 import * as React from 'react'
 
 function App() {
-  const [name, setName] = React.useState()
-  const [animal, setAnimal] = React.useState('tiger')
+  const [name, setName] = React.useState<string | undefined>()
+  const [animal, setAnimal] = React.useState<string | undefined>('tiger')
   return (
     <div>
       <div>
@@ -20,7 +20,7 @@ function App() {
         </label>
       </div>
       <div>
-        <button onClick={() => setAnimal()}>Unset animal</button>
+        <button onClick={() => setAnimal(undefined)}>Unset animal</button>
         <label>
           Changing from controlled to uncontrolled:{' '}
           <input value={animal} onChange={e => setAnimal(e.target.value)} />

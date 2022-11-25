@@ -1,27 +1,44 @@
-// http://localhost:3000/isolated/examples/counter-after.js
+// http://localhost:3000/isolated/examples/counter-after.tsx
 
 import * as React from 'react'
+import { exhaustiveCheck } from '../utils'
 
-// src/context/counter.js
-const CounterContext = React.createContext()
+type CounterState = {
+  count: number
+}
 
-function CounterProvider({step = 1, initialCount = 0, ...props}) {
+type CounterAction =
+  | {
+    type: 'increment'
+    step?: number
+  }
+  | {
+    type: 'decrement'
+    step?: number
+  }
+
+type TCounterContext = readonly [CounterState, React.Dispatch<CounterAction>]
+
+// src/context/counter.tsx
+const CounterContext = React.createContext<TCounterContext | undefined>(undefined)
+
+function CounterProvider({ step = 1, initialCount = 0, ...props }) {
   const [state, dispatch] = React.useReducer(
-    (state, action) => {
+    (state: CounterState, action: CounterAction) => {
       const change = action.step ?? step
       switch (action.type) {
         case 'increment': {
-          return {...state, count: state.count + change}
+          return { ...state, count: state.count + change }
         }
         case 'decrement': {
-          return {...state, count: state.count - change}
+          return { ...state, count: state.count - change }
         }
         default: {
-          throw new Error(`Unhandled action type: ${action.type}`)
+          exhaustiveCheck(action, 'action.type')
         }
       }
     },
-    {count: initialCount},
+    { count: initialCount },
   )
 
   return <CounterContext.Provider value={[state, dispatch]} {...props} />
@@ -35,12 +52,12 @@ function useCounter() {
   return context
 }
 
-const increment = dispatch => dispatch({type: 'increment'})
-const decrement = dispatch => dispatch({type: 'decrement'})
+const increment = (dispatch: React.Dispatch<CounterAction>) => dispatch({ type: 'increment' })
+const decrement = (dispatch: React.Dispatch<CounterAction>) => dispatch({ type: 'decrement' })
 
 // export {CounterProvider, useCounter, increment, decrement}
 
-// src/screens/counter.js
+// src/screens/counter.tsx
 // import {useCounter, increment, decrement} from 'context/counter'
 
 function Counter() {
@@ -54,7 +71,7 @@ function Counter() {
   )
 }
 
-// src/index.js
+// src/index.tsx
 // import {CounterProvider} from 'context/counter'
 
 function App() {
