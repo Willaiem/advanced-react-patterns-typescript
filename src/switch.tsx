@@ -1,5 +1,5 @@
-import './switch.styles.css'
 import * as React from 'react'
+import './switch.styles.css'
 
 // STOP! You should not have to change anything in this file to
 // make it through the workshop. If tests are failing because of
@@ -11,9 +11,14 @@ import * as React from 'react'
 // this is here to fill in for the onChange handler
 // we're not using onChange because it seems to behave
 // differently in codesandbox and locally :shrug:
-const noop = () => {}
+const noop = () => { }
 
-class Switch extends React.Component {
+type TSwitch =
+  & Omit<JSX.IntrinsicElements['span'], 'onClick'>
+  & Pick<JSX.IntrinsicElements['input'], 'onClick'>
+  & { on?: boolean }
+
+class Switch extends React.Component<TSwitch> {
   render() {
     const {
       on,
@@ -29,8 +34,9 @@ class Switch extends React.Component {
     ]
       .filter(Boolean)
       .join(' ')
+
     return (
-      <label aria-label={ariaLabel || 'Toggle'} style={{display: 'block'}}>
+      <label aria-label={ariaLabel || 'Toggle'} style={{ display: 'block' }}>
         <input
           className="toggle-input"
           type="checkbox"
@@ -45,4 +51,4 @@ class Switch extends React.Component {
   }
 }
 
-export {Switch}
+export { Switch }
